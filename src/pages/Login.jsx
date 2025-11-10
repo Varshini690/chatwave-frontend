@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useTheme } from "../ThemeContext"; // ✅ Theme hook
-import ThemeToggle from "../components/ThemeToggle"; // ✅ Added for completeness
+ // ✅ Added for completeness
 
 function Login() {
   const navigate = useNavigate();

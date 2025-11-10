@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useTheme } from "../ThemeContext";
-import ThemeToggle from "../components/ThemeToggle"; // ✅ Theme toggle button
+ // ✅ Theme toggle button
 
 function Register() {
   const navigate = useNavigate();

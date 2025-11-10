@@ -425,11 +425,11 @@ export default function Chat() {
 >
 
      <motion.div
-  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+ initial={{ opacity: 0, y: 20, scale: 0.95 }}
   animate={{ opacity: 1, y: 0, scale: 1 }}
   transition={{ duration: 0.6, ease: "easeOut" }}
-  layout={false}
   style={{
+    transformOrigin: "center top",
     width: "100%",
     maxWidth: isMobile ? "100%" : 1100,
     height: wrapperHeight,
@@ -1344,24 +1344,23 @@ export default function Chat() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
               transition={{ duration: 0.25 }}
-              style={{
-                position: "fixed",
-                bottom: 26,
-                left: "50%",
-                transform: "translateX(-50%)",
-                background:
-                  theme === "light"
-                    ? "rgba(37,99,235,0.9)"
-                    : "rgba(96,165,250,0.9)",
-                color: "white",
-                padding: "10px 16px",
-                borderRadius: 10,
-                boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
-                fontSize: isMobile ? 13 : 14,
-                textAlign: "center",
-                maxWidth: "80%",
-                zIndex: 50,
-              }}
+            style={{
+  width: "100%",
+  maxWidth: isMobile ? "100%" : 1100,
+  height: isMobile ? "100vh" : "85vh",
+  background: "white",
+  borderRadius: isMobile ? 0 : 18,
+  boxShadow: isMobile ? "none" : "0 10px 40px rgba(0,0,0,0.15)",
+  display: "flex",
+  flexDirection: isMobile ? "column" : "row",
+  overflow: "hidden",
+  position: "relative",
+
+  // ✅ FIXED vertical centering
+  marginTop: isMobile ? 0 : "auto",
+  marginBottom: isMobile ? 0 : "auto",
+}}
+
             >
               {toast}
             </motion.div>
