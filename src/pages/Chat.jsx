@@ -410,8 +410,8 @@ export default function Chat() {
   return (
     <div
   style={{
-    height: "100svh",
-    paddingTop: "env(safe-area-inset-top)",
+    height: "100dvh",
+    paddingTop: "16px", 
     background: themeColors.background,
     display: "flex",
     justifyContent: "center",
@@ -419,22 +419,23 @@ export default function Chat() {
     padding: isMobile ? 0 : 20,
     margin: 0,
     overflow: "hidden",
+    overflowY: "auto",
     transition: "all 0.4s ease-in-out",
     color: themeColors.text,
   }}
 >
 
      <motion.div
- initial={{ opacity: 0, y: 20, scale: 0.95 }}
-  animate={{ opacity: 1, y: 0, scale: 1 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
+  initial={{ opacity: 0, scale: 0.97 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.5, ease: "easeOut" }}
   style={{
     transformOrigin: "center top",
     width: "100%",
     maxWidth: isMobile ? "100%" : 1100,
     height: wrapperHeight,
     background: themeColors.card,
-    borderRadius: isMobile ? 0 : 28, // ✅ smoother outer curve
+    borderRadius: isMobile ? 0 : 28,
     boxShadow: isMobile
       ? "none"
       : theme === "dark"
@@ -442,14 +443,15 @@ export default function Chat() {
       : "0 12px 45px rgba(0,0,0,0.25)",
     display: "flex",
     flexDirection: isMobile ? "column" : "row",
-    overflow: "hidden",          // ✅ aligns both sides evenly
+    overflow: "hidden",
     position: "relative",
     margin: "auto",
     boxSizing: "border-box",
     transformOrigin: "top center",
-    border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.1)", // ✅ subtle border
+    border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.1)",
   }}
 >
+
 
 
 

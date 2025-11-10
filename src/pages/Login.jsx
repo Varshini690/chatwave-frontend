@@ -9,8 +9,7 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
-import { useTheme } from "../ThemeContext"; // ✅ Theme hook
- // ✅ Added for completeness
+import { useTheme } from "../ThemeContext"; // ✅ Only useTheme — no ThemeToggle import
 
 function Login() {
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ function Login() {
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { theme } = useTheme(); // ✅ Get current theme
+  const { theme } = useTheme();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -58,6 +57,7 @@ function Login() {
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [0, 1], [10, -10]);
   const rotateY = useTransform(x, [0, 1], [-10, 10]);
+
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const xVal = (e.clientX - rect.left) / rect.width;
@@ -65,6 +65,7 @@ function Login() {
     x.set(xVal);
     y.set(yVal);
   };
+
   const handleMouseLeave = () => {
     x.set(0.5);
     y.set(0.5);
@@ -73,7 +74,7 @@ function Login() {
   // 🌗 Theme-based colors
   const background =
     theme === "light"
-      ? "linear-gradient(120deg,#f0f9ff 0%,#e0f2fe 50%,#ede9fe 100%)"
+      ? "linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%)"
       : "radial-gradient(circle at top left, #020617, #0f172a 40%, #1e3a8a 100%)";
 
   const cardBackground =
@@ -97,7 +98,7 @@ function Login() {
         justifyContent: "center",
         alignItems: "center",
         padding: "16px",
-        fontFamily: "Inter,sans-serif",
+        fontFamily: "Inter, sans-serif",
         transition: "all 0.4s ease-in-out",
         position: "relative",
         overflow: "hidden",
@@ -118,8 +119,6 @@ function Login() {
           }}
         />
       )}
-
-      
 
       <motion.div
         style={{
@@ -173,6 +172,7 @@ function Login() {
             Welcome Back 👋
           </motion.h2>
 
+          {/* Login Form */}
           <motion.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0, y: 20 }}
@@ -180,7 +180,7 @@ function Login() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             {/* Email */}
-            <div style={{ marginBottom: "18px", marginRight: "18px" }}>
+            <div style={{ marginBottom: "18px" }}>
               <label style={{ ...labelStyle, color: labelColor }}>Email</label>
               <motion.input
                 whileFocus={{
@@ -204,7 +204,7 @@ function Login() {
             </div>
 
             {/* Password */}
-            <div style={{ marginBottom: "18px", marginRight: "18px" }}>
+            <div style={{ marginBottom: "18px" }}>
               <label style={{ ...labelStyle, color: labelColor }}>Password</label>
               <div style={{ position: "relative" }}>
                 <motion.input
@@ -309,7 +309,7 @@ function Login() {
         </motion.div>
       </motion.div>
 
-      {/* Reset Modal */}
+      {/* Forgot Password Modal */}
       <AnimatePresence>
         {showReset && (
           <motion.div
@@ -329,9 +329,7 @@ function Login() {
                 color: textColor,
               }}
             >
-              <h4 style={{ marginBottom: "10px", color: "#2563eb" }}>
-                Reset Password
-              </h4>
+              <h4 style={{ marginBottom: "10px", color: "#2563eb" }}>Reset Password</h4>
               <p
                 style={{
                   fontSize: "13px",

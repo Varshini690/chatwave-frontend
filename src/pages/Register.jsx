@@ -4,8 +4,7 @@ import API from "../api";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
-import { useTheme } from "../ThemeContext";
- // ✅ Theme toggle button
+import { useTheme } from "../ThemeContext"; // ✅ Only useTheme — no ThemeToggle import
 
 function Register() {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ function Register() {
   });
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { theme } = useTheme();
+  const { theme } = useTheme(); // ✅ gets current theme
 
   // Input handler
   const handleChange = (e) =>
@@ -24,22 +23,21 @@ function Register() {
 
   // Submit handler
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await API.post("/register", form, {
-      headers: { "Content-Type": "application/json" },
-    });
-    setMessage(res.data.message || "Registered successfully!");
-    alert("🎉 Registration successful! Please log in.");
-    navigate("/login");
-  } catch (err) {
-    console.error("❌ Registration error:", err);
-    setMessage(err.response?.data?.error || "Error registering");
-  }
-};
+    e.preventDefault();
+    try {
+      const res = await API.post("/register", form, {
+        headers: { "Content-Type": "application/json" },
+      });
+      setMessage(res.data.message || "Registered successfully!");
+      alert("🎉 Registration successful! Please log in.");
+      navigate("/login");
+    } catch (err) {
+      console.error("❌ Registration error:", err);
+      setMessage(err.response?.data?.error || "Error registering");
+    }
+  };
 
-
-  // Tilt animation
+  // 3D tilt animation
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [0, 1], [10, -10]);
@@ -58,11 +56,11 @@ function Register() {
     y.set(0.5);
   };
 
-  // 🌗 Theme-based colors
+  // Theme-based colors
   const background =
     theme === "light"
       ? "linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%)"
-      : "radial-gradient(circle at top left, #020617, #0f172a 40%, #1e3a8a 100%)"; // ✨ updated deep glowing gradient
+      : "radial-gradient(circle at top left, #020617, #0f172a 40%, #1e3a8a 100%)";
 
   const cardBackground =
     theme === "light"
@@ -109,8 +107,6 @@ function Register() {
         />
       )}
 
-     
-
       {/* 🌈 3D Card Container */}
       <motion.div
         style={{
@@ -133,12 +129,12 @@ function Register() {
             boxShadow:
               theme === "light"
                 ? "0 10px 40px rgba(0,0,0,0.1)"
-                : "0 12px 45px rgba(59,130,246,0.35)", // ✨ more vivid dark glow
+                : "0 12px 45px rgba(59,130,246,0.35)",
             transition: "transform 0.3s ease",
             color: textColor,
           }}
         >
-          {/* ✨ Fixed Gradient Title */}
+          {/* ✨ Title */}
           <div
             style={{
               textAlign: "center",
@@ -158,11 +154,8 @@ function Register() {
                   theme === "light"
                     ? "linear-gradient(90deg, #2563eb, #06b6d4)"
                     : "linear-gradient(90deg, #93c5fd, #38bdf8)",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "100%",
-                backgroundPosition: "center",
-                WebkitBackgroundClip: "text",
                 backgroundClip: "text",
+                WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 textShadow:
                   theme === "dark"
@@ -170,7 +163,6 @@ function Register() {
                     : "0 0 5px rgba(37,99,235,0.15)",
                 letterSpacing: "0.5px",
                 userSelect: "none",
-                willChange: "transform, opacity",
               }}
             >
               Create Your Account 🌊
@@ -185,7 +177,7 @@ function Register() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             {/* Username */}
-            <div style={{ marginBottom: "22px", marginRight: "18px" }}>
+            <div style={{ marginBottom: "22px" }}>
               <label
                 style={{
                   fontWeight: "600",
@@ -218,13 +210,12 @@ function Register() {
                   fontSize: "15px",
                   background: inputBg,
                   color: textColor,
-                  transition: "all 0.2s ease-in-out",
                 }}
               />
             </div>
 
             {/* Email */}
-            <div style={{ marginBottom: "22px", marginRight: "18px" }}>
+            <div style={{ marginBottom: "22px" }}>
               <label
                 style={{
                   fontWeight: "600",
@@ -257,13 +248,12 @@ function Register() {
                   fontSize: "15px",
                   background: inputBg,
                   color: textColor,
-                  transition: "all 0.2s ease-in-out",
                 }}
               />
             </div>
 
             {/* Password */}
-            <div style={{ marginBottom: "22px", marginRight: "18px" }}>
+            <div style={{ marginBottom: "22px" }}>
               <label
                 style={{
                   fontWeight: "600",
@@ -297,7 +287,6 @@ function Register() {
                     fontSize: "15px",
                     background: inputBg,
                     color: textColor,
-                    transition: "all 0.2s ease-in-out",
                   }}
                 />
                 <span
@@ -311,15 +300,9 @@ function Register() {
                   }}
                 >
                   {showPassword ? (
-                    <EyeOff
-                      size={20}
-                      color={theme === "light" ? "#64748b" : "#cbd5e1"}
-                    />
+                    <EyeOff size={20} color={theme === "light" ? "#64748b" : "#cbd5e1"} />
                   ) : (
-                    <Eye
-                      size={20}
-                      color={theme === "light" ? "#64748b" : "#cbd5e1"}
-                    />
+                    <Eye size={20} color={theme === "light" ? "#64748b" : "#cbd5e1"} />
                   )}
                 </span>
               </div>
