@@ -177,7 +177,7 @@ function Register() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             {/* Username */}
-            <div style={{ marginBottom: "22px" }}>
+            <div style={{ marginBottom: "22px" ,marginRight:"18px"}}>
               <label
                 style={{
                   fontWeight: "600",
@@ -215,7 +215,7 @@ function Register() {
             </div>
 
             {/* Email */}
-            <div style={{ marginBottom: "22px" }}>
+            <div style={{ marginBottom: "22px" ,marginRight:"18px"}}>
               <label
                 style={{
                   fontWeight: "600",
@@ -253,7 +253,7 @@ function Register() {
             </div>
 
             {/* Password */}
-            <div style={{ marginBottom: "22px" }}>
+            <div style={{ marginBottom: "22px" ,marginRight:"18px"}}>
               <label
                 style={{
                   fontWeight: "600",

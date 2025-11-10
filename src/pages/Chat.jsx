@@ -7,7 +7,6 @@ import { Send, Smile, Users, Home, Search, Ban, UserPlus } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { useTheme } from "../ThemeContext";
 
-
 /* -----------------------------
    Viewport helpers
 ------------------------------ */
@@ -72,7 +71,6 @@ export default function Chat() {
       theme === "light"
         ? "linear-gradient(135deg, #c7d2fe, #a5f3fc, #e0e7ff)"
         : "linear-gradient(135deg, #0f172a, #1e293b, #334155)",
-       
     sidebar:
       theme === "light"
         ? "linear-gradient(135deg, #2563eb, #38bdf8)"
@@ -84,11 +82,6 @@ export default function Chat() {
     border: theme === "light" ? "#e2e8f0" : "#475569",
     accent: "linear-gradient(135deg, #2563eb, #38bdf8)",
   };
-  const glowStrong =
-  theme === "dark"
-    ? "0 0 25px rgba(56,189,248,0.55), 0 0 60px rgba(37,99,235,0.35)"
-    : "none";
-
 
   // Keep showSidebar in sync with viewport changes
   useEffect(() => {
@@ -400,67 +393,51 @@ export default function Chat() {
   };
 
   /* -----------------------------
-     Layout: wrapper + responsive sizing
-     - Centered on iPad/tablets and laptops
-     - 100svh on small phones (prevents top cutting)
+     Responsive sizing
+     - Centered card on large screens
+     - Safe viewport height to prevent keyboard jump
+     - Card margins: 20 (top/bottom) & 10 (sides)
   ------------------------------ */
-  const wrapperHeight = isMobile ? "100svh" : "90vh";
 
-  // ---------- UI ----------
   return (
-   <div
-  style={{
-    height: "100dvh",
-    background: themeColors.background,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: isMobile ? "10px" : "30px", // ✅ add consistent inner spacing
-    margin: 0,
-    overflow: "hidden",
-    overflowY: "auto",
-    boxSizing: "border-box",
-    transition: "all 0.4s ease-in-out",
-    color: themeColors.text,
-  }}
->
-
-
-     <motion.div
-  initial={{ opacity: 0, scale: 0.97 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.5, ease: "easeOut" }}
-   style={{
-    transformOrigin: "center top",
-    width: "100%",
-    maxWidth: isMobile ? "100%" : "1080px",  // ✅ slightly smaller for safe centering
-    height: wrapperHeight,
-    background: themeColors.card,
-    borderRadius: isMobile ? 0 : 32,
-    boxShadow: isMobile
-      ? "none"
-      : theme === "dark"
-      ? "0 0 30px rgba(56,189,248,0.45), 0 0 80px rgba(37,99,235,0.25)"
-      : "0 15px 55px rgba(0,0,0,0.25)",
-    display: "flex",
-    flexDirection: isMobile ? "column" : "row",
-    overflow: "hidden",
-    position: "relative",
-    margin: "0 auto",         // ✅ horizontally centers it perfectly
-    marginTop: isMobile ? 10 : 24,   // ✅ adds breathing room top
-    marginBottom: isMobile ? 10 : 24, // ✅ adds breathing room bottom
-    boxSizing: "border-box",
-    border:
-      theme === "light"
-        ? "1px solid #e2e8f0"
-        : "1px solid rgba(255,255,255,0.08)",
-  }}
-
->
-
-
-
-
+    <div
+      style={{
+        minHeight: "100svh", // ✅ safe viewport (prevents jump on mobile)
+        background: themeColors.background,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "20px 10px", // ✅ 20 top/bottom, 10 left/right
+        boxSizing: "border-box",
+        transition: "all 0.4s ease-in-out",
+        color: themeColors.text,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{
+          width: "min(1080px, 100%)",
+          maxWidth: "1080px",
+          height: "calc(100svh - 40px)", // ✅ respects the 20px top/bottom padding
+          background: themeColors.card,
+          borderRadius: 12, // ✅ slightly rounded
+          boxShadow:
+            theme === "dark"
+              ? "0 0 30px rgba(56,189,248,0.35), 0 0 80px rgba(37,99,235,0.18)"
+              : "0 15px 55px rgba(0,0,0,0.20)",
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          overflow: "hidden",
+          position: "relative",
+          margin: "0 auto", // ✅ centers the card
+          border:
+            theme === "light"
+              ? "1px solid #e2e8f0"
+              : "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
         {/* ======= Sidebar (animated) ======= */}
         <AnimatePresence>
           {(showSidebar || !isMobile) && (
@@ -471,22 +448,21 @@ export default function Chat() {
               exit={{ x: isMobile ? -320 : 0, opacity: 0 }}
               transition={{ duration: 0.28 }}
               style={{
-  width: isMobile ? "86%" : 300,
-  background: themeColors.sidebar,
-  color: "white",
-  padding: isMobile ? 12 : 18,
-  display: "flex",
-  flexDirection: "column",
-  alignSelf: "stretch",   // ✅ keeps same height as right chat area
-  justifyContent: "flex-start",
-  position: isMobile ? "absolute" : "relative",
-  top: 0,
-  left: 0,
-  height: "100%",
-  zIndex: 20,
-  borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.15)",
-}}
-
+                width: isMobile ? "86%" : 300,
+                background: themeColors.sidebar,
+                color: "white",
+                padding: isMobile ? 12 : 18,
+                display: "flex",
+                flexDirection: "column",
+                alignSelf: "stretch",
+                justifyContent: "flex-start",
+                position: isMobile ? "absolute" : "relative",
+                top: 0,
+                left: 0,
+                height: "100%",
+                zIndex: 20,
+                borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.15)",
+              }}
             >
               {/* Brand */}
               <div
@@ -501,7 +477,15 @@ export default function Chat() {
               </div>
 
               {/* Mode buttons */}
-              <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center", justifyContent: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginTop: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <button
                   onClick={() => setMode("private")}
                   style={{
@@ -513,7 +497,8 @@ export default function Chat() {
                     color: "white",
                     cursor: "pointer",
                     fontSize: isMobile ? 14 : 13,
-                    alignItems: "center", justifyContent: "center",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <Users size={16} /> Private
@@ -586,7 +571,7 @@ export default function Chat() {
                         flex: 1,
                         overflowY: "auto",
                         paddingRight: 4,
-                        maxHeight: isMobile ? "calc(50vh - 120px)" : "auto",
+                        maxHeight: isMobile ? "calc(100% - 120px)" : "auto",
                       }}
                     >
                       {/* Friends */}
@@ -603,72 +588,78 @@ export default function Chat() {
                           {friends.length ? (
                             friends.map((u) => (
                               <div
-                                key={u}
-                                onClick={() => selectReceiver(u)}
-                                style={{
-                                  padding: isMobile ? 10 : 8,
-                                  paddingRight: isMobile ? 14 : 16,
-                                  borderRadius: 8,
-                                  background:
-                                    receiver === u
-                                      ? "rgba(255,255,255,0.3)"
-                                      : "transparent",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  gap: 8,
-                                }}
-                              >
-                                <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
-
-                                <div style={{ display: "flex", gap: 6 }}>
-                                  {/* 🗑️ Delete Chat Button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (window.confirm(`Delete all messages with ${u}?`)) {
-                                        socket.emit("delete_chat", {
-                                          user1: username,
-                                          user2: u,
-                                        });
-                                        setMessages([]);
-                                        if (receiver === u) setReceiver("");
-                                      }
-                                    }}
-                                    title="Delete Chat"
+                                    key={u}
+                                    onClick={() => selectReceiver(u)}
                                     style={{
-                                      background: "white",
-                                      color: "#ef4444",
-                                      border: "none",
-                                      borderRadius: 6,
-                                      padding: "4px 8px",
+                                      padding: 8,
+                                      borderRadius: 8,
+                                      background:
+                                        receiver === u
+                                          ? "rgba(255,255,255,0.3)"
+                                          : "rgba(255,255,255,0.2)",
+                                      marginBottom: 6,
                                       cursor: "pointer",
+                                      wordBreak: "break-word",
+                                      overflowWrap: "anywhere",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "flex-start",
+                                      gap: 6,
                                     }}
                                   >
-                                    🗑️
-                                  </button>
+                                    <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: 6,
+                                        flexWrap: "wrap",
+                                        justifyContent: "flex-start",
+                                      }}
+                                    >
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (window.confirm(`Delete all messages with ${u}?`)) {
+                                            socket.emit("delete_chat", {
+                                              user1: username,
+                                              user2: u,
+                                            });
+                                            setMessages([]);
+                                            if (receiver === u) setReceiver("");
+                                          }
+                                        }}
+                                        title="Delete Chat"
+                                        style={{
+                                          background: "white",
+                                          color: "#ef4444",
+                                          border: "none",
+                                          borderRadius: 6,
+                                          padding: "4px 8px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        🗑️
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          blockUser(u);
+                                        }}
+                                        title="Block"
+                                        style={{
+                                          background: "white",
+                                          color: "#ef4444",
+                                          border: "none",
+                                          borderRadius: 6,
+                                          padding: "4px 8px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        <Ban size={14} /> Block
+                                      </button>
+                                    </div>
+                                  </div>
 
-                                  {/* 🚫 Block Button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      blockUser(u);
-                                    }}
-                                    title="Block"
-                                    style={{  
-                                      background: "white",
-                                      color: "#ef4444",
-                                      border: "none",
-                                      borderRadius: 6,
-                                      padding: "4px 8px",
-                                      cursor: "pointer",
-                                    }}
-                                  >
-                                    <Ban size={14} /> Block
-                                  </button>
-                                </div>
-                              </div>
                             ))
                           ) : (
                             <p style={{ opacity: 0.9, fontSize: isMobile ? 13 : 14 }}>
@@ -761,21 +752,30 @@ export default function Chat() {
                           <div style={{ marginTop: 10 }}>
                             {searchResults.length ? (
                               searchResults.map((u) => (
-                                <div
+                               <div
                                   key={u}
                                   style={{
-                                    padding: 8,
-                                    borderRadius: 8,
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
                                     background: "rgba(255,255,255,0.2)",
+                                    borderRadius: 8,
+                                    padding: 8,
                                     marginBottom: 6,
+                                    wordBreak: "break-word",
+                                    overflowWrap: "anywhere",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-start",
                                     fontSize: isMobile ? 14 : 15,
                                   }}
                                 >
-                                  <span>{u}</span>
-                                  <div style={{ display: "flex", gap: 6 }}>
+                                  <span style={{ marginBottom: 6 }}>{u}</span>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: 6,
+                                      flexWrap: "wrap",
+                                      justifyContent: "flex-start",
+                                    }}
+                                  >
                                     <button
                                       onClick={() => selectReceiver(u)}
                                       style={{
@@ -820,6 +820,7 @@ export default function Chat() {
                                     )}
                                   </div>
                                 </div>
+
                               ))
                             ) : (
                               <p
@@ -848,36 +849,40 @@ export default function Chat() {
                             Blocked Users
                           </h5>
                           {blockedUsers.length ? (
-                            blockedUsers.map((u) => (
-                              <div
-                                key={u}
-                                style={{
-                                  padding: 8,
-                                  background: "rgba(255,255,255,0.2)",
-                                  borderRadius: 8,
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  marginBottom: 6,
-                                }}
-                              >
-                                <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
-                                <button
-                                  onClick={() => unblockUser(u)}
-                                  style={{
-                                    background: "white",
-                                    color: "#2563eb",
-                                    border: "none",
-                                    borderRadius: 6,
-                                    padding: "4px 8px",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Unblock ♻️
-                                </button>
-                              </div>
-                            ))
-                          ) : (
+  blockedUsers.map((u) => (
+    <div
+      key={u}
+      style={{
+        background: "rgba(255,255,255,0.2)",
+        borderRadius: 8,
+        padding: 8,
+        marginBottom: 6,
+        wordBreak: "break-word",
+        overflowWrap: "anywhere",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        fontSize: isMobile ? 14 : 15,
+      }}
+    >
+      <span style={{ marginBottom: 6 }}>{u}</span>
+      <button
+        onClick={() => unblockUser(u)}
+        style={{
+          background: "white",
+          color: "#2563eb",
+          border: "none",
+          borderRadius: 6,
+          padding: "4px 8px",
+          cursor: "pointer",
+        }}
+      >
+        Unblock ♻️
+      </button>
+    </div>
+  ))
+) : (
+
                             <p
                               style={{
                                 opacity: 0.9,
@@ -996,13 +1001,14 @@ export default function Chat() {
             width: "100%",
             height: "100%",
             position: "relative",
+            minWidth: 0, // ✅ allow flex child to shrink on small screens
           }}
         >
           {/* Header */}
           <div
             style={{
               padding: isMobile ? "10px 12px" : "14px 18px",
-              borderBottom: "1px solid #e2e8f0",
+              borderBottom: `1px solid ${themeColors.border}`,
               background: themeColors.card,
               color: themeColors.text,
               fontWeight: 600,
@@ -1034,8 +1040,15 @@ export default function Chat() {
             )}
 
             {/* Title / status */}
-            <div style={{ display: "flex", flexDirection: "column", flex: 1 ,justifyContent: "center",     // ✅ keeps it vertically steady
-    minHeight: 42, }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                justifyContent: "center",
+                minHeight: 42,
+              }}
+            >
               {mode === "private" ? (
                 receiver ? (
                   <>
@@ -1072,7 +1085,7 @@ export default function Chat() {
               )}
             </div>
 
-            {/* Single ThemeToggle — top-right */}
+            {/* Action (block/unblock) */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {mode === "private" && receiver && (
                 !blockedUsers.includes(receiver) ? (
@@ -1107,7 +1120,6 @@ export default function Chat() {
                   </button>
                 )
               )}
-              
             </div>
           </div>
 
@@ -1127,9 +1139,10 @@ export default function Chat() {
                   zIndex: 15,
                   backdropFilter: "blur(6px)",
                   WebkitBackdropFilter: "blur(6px)",
-                  background: theme === "light"
-                    ? "rgba(15, 23, 42, 0.25)"
-                    : "rgba(2, 6, 23, 0.35)",
+                  background:
+                    theme === "light"
+                      ? "rgba(15, 23, 42, 0.25)"
+                      : "rgba(2, 6, 23, 0.35)",
                 }}
                 aria-label="Close sidebar overlay"
               />
@@ -1140,12 +1153,13 @@ export default function Chat() {
           <div
             style={{
               flex: 1,
+              minHeight: 0, // ✅ critical for proper overflow in flex column
               overflowY: "auto",
+              scrollBehavior: "smooth",
               padding: isMobile ? 10 : 18,
               display: "flex",
               flexDirection: "column",
               gap: 10,
-              height: isMobile ? "calc(100vh - 180px)" : "auto",
             }}
           >
             <AnimatePresence>
@@ -1155,9 +1169,9 @@ export default function Chat() {
                 return (
                   <motion.div
                     key={m._id || `${m.sender}-${m.timestamp}-${i}`}
-                    initial={{ opacity: 14, y: 0 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 14 }}
+                    exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.22 }}
                     style={{
                       alignSelf: isSystem
@@ -1251,13 +1265,16 @@ export default function Chat() {
           {/* Input Section */}
           <div
             style={{
+              position: "sticky", // ✅ pins to bottom within card
+              bottom: 0,
               padding: isMobile ? "8px 10px" : "10px 14px",
-              borderTop: "1px solid #e2e8f0",
+              borderTop: `1px solid ${themeColors.border}`,
               display: "flex",
               alignItems: "center",
               gap: 10,
               background: theme === "light" ? "#f8fafc" : "#1e293b",
               flexShrink: 0,
+              zIndex: 5,
             }}
           >
             {/* Emoji Picker Toggle */}
@@ -1317,6 +1334,8 @@ export default function Chat() {
                 border: "1px solid #cbd5e1",
                 outline: "none",
                 fontSize: isMobile ? 14 : 15,
+                background: themeColors.inputBg,
+                color: themeColors.text,
               }}
             />
 
@@ -1344,31 +1363,27 @@ export default function Chat() {
 
         {/* ======= END Chat Section ======= */}
 
-        {/* ======= Toast Notifications ======= */}
+        {/* ======= Toast Notifications (fixed, non-intrusive) ======= */}
         <AnimatePresence>
           {toast && (
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
+              exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.25 }}
-            style={{
-  width: "100%",
-  maxWidth: isMobile ? "100%" : 1100,
-  height: isMobile ? "100vh" : "85vh",
-  background: "white",
-  borderRadius: isMobile ? 0 : 18,
-  boxShadow: isMobile ? "none" : "0 10px 40px rgba(0,0,0,0.15)",
-  display: "flex",
-  flexDirection: isMobile ? "column" : "row",
-  overflow: "hidden",
-  position: "relative",
-
-  // ✅ FIXED vertical centering
-  marginTop: isMobile ? 0 : "auto",
-  marginBottom: isMobile ? 0 : "auto",
-}}
-
+              style={{
+                position: "absolute",
+                bottom: 16,
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: theme === "light" ? "#0f172a" : "#e2e8f0",
+                color: theme === "light" ? "white" : "#0f172a",
+                padding: "10px 14px",
+                borderRadius: 10,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+                zIndex: 50,
+                fontSize: 14,
+              }}
             >
               {toast}
             </motion.div>

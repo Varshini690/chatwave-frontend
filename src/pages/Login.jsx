@@ -417,26 +417,30 @@ const buttonStyle = {
 
 const modalOverlay = {
   position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  background: "rgba(0,0,0,0.4)",
+  inset: 0,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  zIndex: 100,
-  padding: "12px",
+  background: "rgba(0,0,0,0.45)",
+  minHeight: "100svh", // ✅ safe viewport height (fixes mobile keyboard jump)
+  padding: "20px 14px 20px 10px", // ✅ slight right margin (14px)
+  boxSizing: "border-box",
+  zIndex: 1000,
 };
 
+
+
 const modalCard = {
-  padding: "20px 22px",
+  padding: "22px 24px",
   borderRadius: "14px",
   width: "100%",
-  maxWidth: "320px",
-  boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+  maxWidth: "360px",
+  background: "#fff",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
   textAlign: "center",
+  boxSizing: "border-box",
 };
+
 
 const modalInput = {
   width: "100%",
