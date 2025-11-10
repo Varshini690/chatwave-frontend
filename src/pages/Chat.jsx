@@ -1,11 +1,16 @@
-// --- PART 1/4: Chat.jsx (Responsive-only additions; logic untouched) ---
+/* eslint-disable no-unused-vars */
+
 import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Smile, Users, Home, Search, Ban, UserPlus } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
+import { useTheme } from "../ThemeContext";
 
-// ✅ tiny hook to detect mobile (only style decisions use this)
+
+/* -----------------------------
+   Viewport helpers
+------------------------------ */
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < breakpoint : false
@@ -19,10 +24,13 @@ function useIsMobile(breakpoint = 768) {
 }
 
 // ✅ Connect to Flask-SocketIO backend (unchanged)
-const socket = io("http://localhost:5000", { transports: ["websocket"] });
+const socket = io("https://chatwave-backend-9vhe.onrender.com", {
+  transports: ["websocket"],
+});
 
 export default function Chat() {
   const isMobile = useIsMobile(); // ← only used for styles
+  const { theme } = useTheme();
 
   // Modes (unchanged)
   const [mode, setMode] = useState(localStorage.getItem("chatMode") || "private"); // private | room
@@ -32,9 +40,11 @@ export default function Chat() {
 
   // Core state (unchanged)
   const [messages, setMessages] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(!isMobile); // single source of truth for sidebar
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [recentChats, setRecentChats] = useState({});
   const [userStatus, setUserStatus] = useState({});
+  const [recentChats, setRecentChats] = useState({});
+
   const [readReceipts, setReadReceipts] = useState({});
   const [roomUsers, setRoomUsers] = useState([]);
   const [message, setMessage] = useState("");
@@ -54,9 +64,36 @@ export default function Chat() {
   // UI candy (unchanged)
   const [toast, setToast] = useState(null);
   const chatEndRef = useRef(null);
-  const pickerRef = useRef(null);
 
   const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+  const themeColors = {
+    background:
+      theme === "light"
+        ? "linear-gradient(135deg, #c7d2fe, #a5f3fc, #e0e7ff)"
+        : "linear-gradient(135deg, #0f172a, #1e293b, #334155)",
+       
+    sidebar:
+      theme === "light"
+        ? "linear-gradient(135deg, #2563eb, #38bdf8)"
+        : "linear-gradient(135deg, #1e293b, #334155)",
+    card: theme === "light" ? "#ffffff" : "rgba(30,41,59,0.95)",
+    text: theme === "light" ? "#0f172a" : "#f8fafc",
+    subtext: theme === "light" ? "#475569" : "#cbd5e1",
+    inputBg: theme === "light" ? "#ffffff" : "#1e293b",
+    border: theme === "light" ? "#e2e8f0" : "#475569",
+    accent: "linear-gradient(135deg, #2563eb, #38bdf8)",
+  };
+  const glowStrong =
+  theme === "dark"
+    ? "0 0 25px rgba(56,189,248,0.55), 0 0 60px rgba(37,99,235,0.35)"
+    : "none";
+
+
+  // Keep showSidebar in sync with viewport changes
+  useEffect(() => {
+    setShowSidebar(!isMobile);
+  }, [isMobile]);
 
   // ---------- Initialize Username (unchanged) ----------
   useEffect(() => {
@@ -132,7 +169,7 @@ export default function Chat() {
       const friend = data.sender === username ? data.receiver : data.sender;
       const isChatOpen =
         mode === "private" &&
-        ((receiver === data.sender) || (receiver === data.receiver));
+        (receiver === data.sender || receiver === data.receiver);
       setRecentChats((prev) => ({
         ...prev,
         [friend]: {
@@ -227,7 +264,7 @@ export default function Chat() {
     const fetchStatus = async () => {
       if (mode === "private" && receiver) {
         try {
-          const res = await fetch(`http://localhost:5000/status/${receiver}`);
+          const res = await fetch(`${process.env.REACT_APP_API_BASE}/status/${receiver}`);
           if (!res.ok) return;
           const data = await res.json();
           setUserStatus((prev) => ({ ...prev, [receiver]: data.status }));
@@ -348,9 +385,7 @@ export default function Chat() {
         return;
       }
       try {
-        const res = await fetch(
-          `http://localhost:5000/search_users?q=${encodeURIComponent(q)}`
-        );
+        const res = await fetch(`${process.env.REACT_APP_API_BASE}/search_users?q=${encodeURIComponent(q)}`);
         const data = await res.json();
         const list = (Array.isArray(data) ? data : []).map((u) => u.username || u);
         setSearchResults(list.filter((u) => u && u !== username));
@@ -364,353 +399,236 @@ export default function Chat() {
     setTimeout(() => setToast(null), 1800);
   };
 
-  // ---------- UI with responsive-only style changes ----------
+  /* -----------------------------
+     Layout: wrapper + responsive sizing
+     - Centered on iPad/tablets and laptops
+     - 100svh on small phones (prevents top cutting)
+  ------------------------------ */
+  const wrapperHeight = isMobile ? "100svh" : "90vh";
+
+  // ---------- UI ----------
   return (
     <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #c7d2fe, #a5f3fc, #e0e7ff)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: isMobile ? "stretch" : "center",
-        padding: isMobile ? 8 : 20,
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        style={{
-          width: "100%",
-          maxWidth: isMobile ? "100%" : 1100,
-          height: isMobile ? "100vh" : "85vh",
-          background: "white",
-          borderRadius: isMobile ? 0 : 18,
-          boxShadow: isMobile ? "none" : "0 10px 40px rgba(0,0,0,0.15)",
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          overflow: "hidden",
-        }}
-      >
-        {/* Sidebar */}
-        <div
-          style={{
-            width: isMobile ? "100%" : 300,
-            background: "linear-gradient(135deg, #2563eb, #38bdf8)",
-            color: "white",
-            padding: isMobile ? 12 : 18,
-            display: "flex",
-            flexDirection: "column",
-            borderBottom: isMobile ? "1px solid rgba(255,255,255,0.2)" : "none",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              justifyContent: "space-between",
-            }}
-          >
-            <h3 style={{ margin: 0, fontSize: isMobile ? 18 : 20 }}>ChatWave 💬</h3>
-            {/* (optional) mobile compact badge could go here */}
-          </div>
+  style={{
+    height: "100svh",
+    paddingTop: "env(safe-area-inset-top)",
+    background: themeColors.background,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: isMobile ? 0 : 20,
+    margin: 0,
+    overflow: "hidden",
+    transition: "all 0.4s ease-in-out",
+    color: themeColors.text,
+  }}
+>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 12,alignItems: "center", justifyContent: "center" }}>
-            <button
-              onClick={() => setMode("private")}
+     <motion.div
+  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+  animate={{ opacity: 1, y: 0, scale: 1 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+  layout={false}
+  style={{
+    width: "100%",
+    maxWidth: isMobile ? "100%" : 1100,
+    height: wrapperHeight,
+    background: themeColors.card,
+    borderRadius: isMobile ? 0 : 28, // ✅ smoother outer curve
+    boxShadow: isMobile
+      ? "none"
+      : theme === "dark"
+      ? glowStrong
+      : "0 12px 45px rgba(0,0,0,0.25)",
+    display: "flex",
+    flexDirection: isMobile ? "column" : "row",
+    overflow: "hidden",          // ✅ aligns both sides evenly
+    position: "relative",
+    margin: "auto",
+    boxSizing: "border-box",
+    transformOrigin: "top center",
+    border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.1)", // ✅ subtle border
+  }}
+>
+
+
+
+        {/* ======= Sidebar (animated) ======= */}
+        <AnimatePresence>
+          {(showSidebar || !isMobile) && (
+            <motion.div
+              key="sidebar"
+              initial={{ x: isMobile ? -320 : 0, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: isMobile ? -320 : 0, opacity: 0 }}
+              transition={{ duration: 0.28 }}
               style={{
-                flex: 1,
-                padding: isMobile ? 10 : 8,
-                background: mode === "private" ? "#1e3a8a" : "rgba(255,255,255,0.3)",
-                border: "none",
-                borderRadius: 8,
-                color: "white",
-                cursor: "pointer",
-                fontSize: isMobile ? 14 : 13,
-                alignItems: "center", justifyContent: "center",
-                
-              }}
-            >
-              <Users size={16} /> Private
-            </button>
-            <button
-              onClick={() => setMode("room")}
-              style={{
-                flex: 1,
-                padding: isMobile ? 10 : 8,
-               alignItems: "center", 
-               justifyContent: "center",
-                background: mode === "room" ? "#1e3a8a" : "rgba(255,255,255,0.3)",
-                border: "none",
-                borderRadius: 8,
-                color: "white",
-                cursor: "pointer",
-                fontSize: isMobile ? 14 : 13,
-               marginRight: isMobile ? 20 : 10,
-               
-              }}
-            >
-              <Home size={16} /> Room
-            </button>
-          </div>
+  width: isMobile ? "86%" : 300,
+  background: themeColors.sidebar,
+  color: "white",
+  padding: isMobile ? 12 : 18,
+  display: "flex",
+  flexDirection: "column",
+  alignSelf: "stretch",   // ✅ keeps same height as right chat area
+  justifyContent: "flex-start",
+  position: isMobile ? "absolute" : "relative",
+  top: 0,
+  left: 0,
+  height: "100%",
+  zIndex: 20,
+  borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.15)",
+}}
 
-          {/* (Friends/Search/Blocked tabs continue in PART 2/4 without logic changes) */}
-
-  
-          {mode === "private" && (
-            <>
-              {/* Tabs */}
+            >
+              {/* Brand */}
               <div
                 style={{
                   display: "flex",
-                  gap: 6,
-                  marginTop: 14,
-                  marginRight: isMobile ? 20 : 10,
-                  flexWrap: isMobile ? "wrap" : "nowrap",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "space-between",
                 }}
               >
-                {["friends", "search", "blocked"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setSidebarTab(tab)}
-                    style={{
-                      flex: 1,
-                      padding: isMobile ? "8px 0" : "6px 0",
-                      background:
-                        sidebarTab === tab ? "#1e3a8a" : "rgba(255,255,255,0.2)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      fontWeight: 600,
-                      textTransform: "capitalize",
-                      fontSize: isMobile ? 13 : 14,
-                    }}
-                  >
-                    {tab}
-                  </button>
-                ))}
+                <h3 style={{ margin: 0, fontSize: isMobile ? 18 : 20 }}>ChatWave 💬</h3>
               </div>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={sidebarTab}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.25 }}
+              {/* Mode buttons */}
+              <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center", justifyContent: "center" }}>
+                <button
+                  onClick={() => setMode("private")}
                   style={{
-                    marginTop: 12,
                     flex: 1,
-                    overflowY: "auto",
-                    paddingRight: 4,
-                    maxHeight: isMobile ? "calc(50vh - 120px)" : "auto",
+                    padding: isMobile ? 10 : 8,
+                    background: mode === "private" ? "#1e3a8a" : "rgba(255,255,255,0.3)",
+                    border: "none",
+                    borderRadius: 8,
+                    color: "white",
+                    cursor: "pointer",
+                    fontSize: isMobile ? 14 : 13,
+                    alignItems: "center", justifyContent: "center",
                   }}
                 >
-                  {/* Friends */}
-                  {sidebarTab === "friends" && (
-                    <>
-                      <h5
+                  <Users size={16} /> Private
+                </button>
+                <button
+                  onClick={() => setMode("room")}
+                  style={{
+                    flex: 1,
+                    padding: isMobile ? 10 : 8,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: mode === "room" ? "#1e3a8a" : "rgba(255,255,255,0.3)",
+                    border: "none",
+                    borderRadius: 8,
+                    color: "white",
+                    cursor: "pointer",
+                    fontSize: isMobile ? 14 : 13,
+                    marginRight: isMobile ? 20 : 10,
+                  }}
+                >
+                  <Home size={16} /> Room
+                </button>
+              </div>
+
+              {/* Sidebar tabs & content */}
+              {mode === "private" && (
+                <>
+                  {/* Tabs */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 6,
+                      marginTop: 14,
+                      marginRight: isMobile ? 20 : 10,
+                      flexWrap: isMobile ? "wrap" : "nowrap",
+                    }}
+                  >
+                    {["friends", "search", "blocked"].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setSidebarTab(tab)}
                         style={{
-                          margin: "6px 0 8px",
-                          fontSize: isMobile ? 15 : 16,
+                          flex: 1,
+                          padding: isMobile ? "8px 0" : "6px 0",
+                          background:
+                            sidebarTab === tab ? "#1e3a8a" : "rgba(255,255,255,0.2)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          textTransform: "capitalize",
+                          fontSize: isMobile ? 13 : 14,
                         }}
                       >
-                        Friends
-                      </h5>
-                      {friends.length ? (
-                        friends.map((u) => (
-                          <div
-                            key={u}
-                            onClick={() => selectReceiver(u)}
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={sidebarTab}
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.25 }}
+                      style={{
+                        marginTop: 12,
+                        flex: 1,
+                        overflowY: "auto",
+                        paddingRight: 4,
+                        maxHeight: isMobile ? "calc(50vh - 120px)" : "auto",
+                      }}
+                    >
+                      {/* Friends */}
+                      {sidebarTab === "friends" && (
+                        <>
+                          <h5
                             style={{
-                              padding: isMobile ? 10 : 8,
-                              paddingRight: isMobile ? 14 : 16,
-                              borderRadius: 8,
-                              background:
-                                receiver === u
-                                  ? "rgba(255,255,255,0.3)"
-                                  : "transparent",
-                              cursor: "pointer",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              gap: 8,
+                              margin: "6px 0 8px",
+                              fontSize: isMobile ? 15 : 16,
                             }}
                           >
-                            <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
-
-                            <div style={{ display: "flex", gap: 6 }}>
-                              {/* 🗑️ Delete Chat Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (window.confirm(`Delete all messages with ${u}?`)) {
-                                    socket.emit("delete_chat", {
-                                      user1: username,
-                                      user2: u,
-                                    });
-                                    setMessages([]);
-                                    if (receiver === u) setReceiver("");
-                                  }
-                                }}
-                                title="Delete Chat"
+                            Friends
+                          </h5>
+                          {friends.length ? (
+                            friends.map((u) => (
+                              <div
+                                key={u}
+                                onClick={() => selectReceiver(u)}
                                 style={{
-                                  background: "white",
-                                  color: "#ef4444",
-                                  border: "none",
-                                  borderRadius: 6,
-                                  padding: "4px 8px",
+                                  padding: isMobile ? 10 : 8,
+                                  paddingRight: isMobile ? 14 : 16,
+                                  borderRadius: 8,
+                                  background:
+                                    receiver === u
+                                      ? "rgba(255,255,255,0.3)"
+                                      : "transparent",
                                   cursor: "pointer",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  gap: 8,
                                 }}
                               >
-                                🗑️
-                              </button>
+                                <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
 
-                              {/* 🚫 Block Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  blockUser(u);
-                                }}
-                                title="Block"
-                                style={{
-                                  background: "white",
-                                  color: "#ef4444",
-                                  border: "none",
-                                  borderRadius: 6,
-                                  padding: "4px 8px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <Ban size={14} /> Block
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p style={{ opacity: 0.9, fontSize: isMobile ? 13 : 14 }}>
-                          No friends yet. Start a chat!
-                        </p>
-                      )}
-
-                      <h5
-                        style={{
-                          margin: "12px 0 8px",
-                          fontSize: isMobile ? 15 : 16,
-                        }}
-                      >
-                        Online
-                      </h5>
-                      {onlineUsers
-                        .filter((u) => u !== username)
-                        .map((u) => (
-                          <div
-                            key={u}
-                            style={{
-                              padding: isMobile ? 10 : 8,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              borderRadius: 8,
-                              cursor: "pointer",
-                            }}
-                          >
-                            <span
-                              onClick={() => selectReceiver(u)}
-                              style={{ fontSize: isMobile ? 14 : 15 }}
-                            >
-                              {u}
-                            </span>
-                            {!friends.includes(u) &&
-                              !blockedUsers.includes(u) && (
-                                <button
-                                  onClick={() => selectReceiver(u)}
-                                  style={{
-                                    background: "white",
-                                    color: "#2563eb",
-                                    border: "none",
-                                    borderRadius: 6,
-                                    padding: "4px 8px",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    fontSize: isMobile ? 13 : 14,
-                                  }}
-                                >
-                                  <UserPlus size={14} /> Chat
-                                </button>
-                              )}
-                          </div>
-                        ))}
-                    </>
-                  )}
-
-                  {/* Search */}
-                  {sidebarTab === "search" && (
-                    <>
-                      <div
-                        style={{
-                          background: "rgba(255,255,255,0.25)",
-                          borderRadius: 8,
-                          padding: 6,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <Search size={16} />
-                        <input
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search registered users..."
-                          style={{
-                            flex: 1,
-                            background: "transparent",
-                            border: "none",
-                            outline: "none",
-                            color: "white",
-                            fontSize: isMobile ? 14 : 15,
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ marginTop: 10 }}>
-                        {searchResults.length ? (
-                          searchResults.map((u) => (
-                            <div
-                              key={u}
-                              style={{
-                                padding: 8,
-                                borderRadius: 8,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                background: "rgba(255,255,255,0.2)",
-                                marginBottom: 6,
-                                fontSize: isMobile ? 14 : 15,
-                              }}
-                            >
-                              <span>{u}</span>
-                              <div style={{ display: "flex", gap: 6 }}>
-                                <button
-                                  onClick={() => selectReceiver(u)}
-                                  style={{
-                                    background: "white",
-                                    color: "#2563eb",
-                                    border: "none",
-                                    borderRadius: 6,
-                                    padding: "4px 8px",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Message
-                                </button>
-                                {!blockedUsers.includes(u) ? (
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  {/* 🗑️ Delete Chat Button */}
                                   <button
-                                    onClick={() => blockUser(u)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (window.confirm(`Delete all messages with ${u}?`)) {
+                                        socket.emit("delete_chat", {
+                                          user1: username,
+                                          user2: u,
+                                        });
+                                        setMessages([]);
+                                        if (receiver === u) setReceiver("");
+                                      }
+                                    }}
+                                    title="Delete Chat"
                                     style={{
                                       background: "white",
                                       color: "#ef4444",
@@ -720,198 +638,356 @@ export default function Chat() {
                                       cursor: "pointer",
                                     }}
                                   >
-                                    Block
+                                    🗑️
                                   </button>
-                                ) : (
+
+                                  {/* 🚫 Block Button */}
                                   <button
-                                    onClick={() => unblockUser(u)}
-                                    style={{
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      blockUser(u);
+                                    }}
+                                    title="Block"
+                                    style={{  
                                       background: "white",
-                                      color: "#16a34a",
+                                      color: "#ef4444",
                                       border: "none",
                                       borderRadius: 6,
                                       padding: "4px 8px",
                                       cursor: "pointer",
                                     }}
                                   >
-                                    Unblock
+                                    <Ban size={14} /> Block
                                   </button>
-                                )}
+                                </div>
                               </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p
-                            style={{
-                              opacity: 0.9,
-                              marginTop: 8,
-                              fontSize: isMobile ? 13 : 14,
-                            }}
-                          >
-                            Type to search users…
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
+                            ))
+                          ) : (
+                            <p style={{ opacity: 0.9, fontSize: isMobile ? 13 : 14 }}>
+                              No friends yet. Start a chat!
+                            </p>
+                          )}
 
-                  {/* Blocked */}
-                  {sidebarTab === "blocked" && (
-                    <>
-                      <h5
-                        style={{
-                          margin: "6px 0 8px",
-                          fontSize: isMobile ? 15 : 16,
-                        }}
-                      >
-                        Blocked Users
-                      </h5>
-                      {blockedUsers.length ? (
-                        blockedUsers.map((u) => (
-                          <div
-                            key={u}
+                          <h5
                             style={{
-                              padding: 8,
-                              background: "rgba(255,255,255,0.2)",
-                              borderRadius: 8,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              marginBottom: 6,
+                              margin: "12px 0 8px",
+                              fontSize: isMobile ? 15 : 16,
                             }}
                           >
-                            <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
-                            <button
-                              onClick={() => unblockUser(u)}
+                            Online
+                          </h5>
+                          {onlineUsers
+                            .filter((u) => u !== username)
+                            .map((u) => (
+                              <div
+                                key={u}
+                                style={{
+                                  padding: isMobile ? 10 : 8,
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  borderRadius: 8,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <span
+                                  onClick={() => selectReceiver(u)}
+                                  style={{ fontSize: isMobile ? 14 : 15 }}
+                                >
+                                  {u}
+                                </span>
+                                {!friends.includes(u) &&
+                                  !blockedUsers.includes(u) && (
+                                    <button
+                                      onClick={() => selectReceiver(u)}
+                                      style={{
+                                        background: "white",
+                                        color: "#2563eb",
+                                        border: "none",
+                                        borderRadius: 6,
+                                        padding: "4px 8px",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        fontSize: isMobile ? 13 : 14,
+                                      }}
+                                    >
+                                      <UserPlus size={14} /> Chat
+                                    </button>
+                                  )}
+                              </div>
+                            ))}
+                        </>
+                      )}
+
+                      {/* Search */}
+                      {sidebarTab === "search" && (
+                        <>
+                          <div
+                            style={{
+                              background: "rgba(255,255,255,0.25)",
+                              borderRadius: 8,
+                              padding: 6,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <Search size={16} />
+                            <input
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder="Search registered users..."
                               style={{
-                                background: "white",
-                                color: "#2563eb",
+                                flex: 1,
+                                background: "transparent",
                                 border: "none",
-                                borderRadius: 6,
-                                padding: "4px 8px",
-                                cursor: "pointer",
+                                outline: "none",
+                                color: "white",
+                                fontSize: isMobile ? 14 : 15,
+                              }}
+                            />
+                          </div>
+
+                          <div style={{ marginTop: 10 }}>
+                            {searchResults.length ? (
+                              searchResults.map((u) => (
+                                <div
+                                  key={u}
+                                  style={{
+                                    padding: 8,
+                                    borderRadius: 8,
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    background: "rgba(255,255,255,0.2)",
+                                    marginBottom: 6,
+                                    fontSize: isMobile ? 14 : 15,
+                                  }}
+                                >
+                                  <span>{u}</span>
+                                  <div style={{ display: "flex", gap: 6 }}>
+                                    <button
+                                      onClick={() => selectReceiver(u)}
+                                      style={{
+                                        background: "white",
+                                        color: "#2563eb",
+                                        border: "none",
+                                        borderRadius: 6,
+                                        padding: "4px 8px",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      Message
+                                    </button>
+                                    {!blockedUsers.includes(u) ? (
+                                      <button
+                                        onClick={() => blockUser(u)}
+                                        style={{
+                                          background: "white",
+                                          color: "#ef4444",
+                                          border: "none",
+                                          borderRadius: 6,
+                                          padding: "4px 8px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        Block
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => unblockUser(u)}
+                                        style={{
+                                          background: "white",
+                                          color: "#16a34a",
+                                          border: "none",
+                                          borderRadius: 6,
+                                          padding: "4px 8px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        Unblock
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p
+                                style={{
+                                  opacity: 0.9,
+                                  marginTop: 8,
+                                  fontSize: isMobile ? 13 : 14,
+                                }}
+                              >
+                                Type to search users…
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Blocked */}
+                      {sidebarTab === "blocked" && (
+                        <>
+                          <h5
+                            style={{
+                              margin: "6px 0 8px",
+                              fontSize: isMobile ? 15 : 16,
+                            }}
+                          >
+                            Blocked Users
+                          </h5>
+                          {blockedUsers.length ? (
+                            blockedUsers.map((u) => (
+                              <div
+                                key={u}
+                                style={{
+                                  padding: 8,
+                                  background: "rgba(255,255,255,0.2)",
+                                  borderRadius: 8,
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  marginBottom: 6,
+                                }}
+                              >
+                                <span style={{ fontSize: isMobile ? 14 : 15 }}>{u}</span>
+                                <button
+                                  onClick={() => unblockUser(u)}
+                                  style={{
+                                    background: "white",
+                                    color: "#2563eb",
+                                    border: "none",
+                                    borderRadius: 6,
+                                    padding: "4px 8px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Unblock ♻️
+                                </button>
+                              </div>
+                            ))
+                          ) : (
+                            <p
+                              style={{
+                                opacity: 0.9,
+                                fontSize: isMobile ? 13 : 14,
                               }}
                             >
-                              Unblock ♻️
-                            </button>
-                          </div>
-                        ))
-                      ) : (
-                        <p
-                          style={{
-                            opacity: 0.9,
-                            fontSize: isMobile ? 13 : 14,
-                          }}
-                        >
-                          No blocked users 🚫
-                        </p>
+                              No blocked users 🚫
+                            </p>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </>
-          )}
+                    </motion.div>
+                  </AnimatePresence>
+                </>
+              )}
 
-          {/* Room Join Section */}
-          {mode === "room" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 20,
-                background: "rgba(255,255,255,0.2)",
-                padding: 12,
-                borderRadius: 10,
-                 width: isMobile ? "85%" : "auto",
-                marginLeft: isMobile ? "auto" : 0,
-               marginRight: isMobile ? "auto" : 0,
-              }}
-            >
-              <h5
-                style={{
-                  marginTop: 5,
-                  marginBottom: 10,
-                  color: "white",
-                  fontSize: isMobile ? 15 : 16,
-                }}
-              >
-                Join Room
-              </h5>
-              <input
-                type="text"
-                placeholder="Enter room name..."
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                style={{
-                   width: isMobile ? "75%" : "auto",
-                  padding: "10px 12px",
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.4)",
-                  outline: "none",
-                  marginBottom: 10,
-                  fontSize: isMobile ? 14 : 15,
-                }}
-              />
-              <button
-                onClick={joinRoom}
-                style={{
-                  background: "white",
-                  color: "#2563eb",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 10px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                  fontSize: isMobile ? 14 : 15,
-                   width: isMobile ? "80%" : "auto",
-                   alignItems: "center",
-                }}
-              >
-                Join 🚀
-              </button>
-
-              {roomUsers.length > 0 && (
+              {/* Room Join Section */}
+              {mode === "room" && (
                 <div
                   style={{
-                    marginTop: 12,
-                    background: "rgba(255,255,255,0.15)",
-                    padding: 8,
-                    borderRadius: 8,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: 20,
+                    background: "rgba(255,255,255,0.2)",
+                    padding: 12,
+                    borderRadius: 10,
+                    width: isMobile ? "85%" : "auto",
+                    marginLeft: isMobile ? "auto" : 0,
+                    marginRight: isMobile ? "auto" : 0,
                   }}
                 >
-                  <h5 style={{ color: "white", fontSize: isMobile ? 15 : 16 }}>
-                    Room Members
+                  <h5
+                    style={{
+                      marginTop: 5,
+                      marginBottom: 10,
+                      color: "white",
+                      fontSize: isMobile ? 15 : 16,
+                    }}
+                  >
+                    Join Room
                   </h5>
-                  {roomUsers.map((u) => (
+                  <input
+                    type="text"
+                    placeholder="Enter room name..."
+                    value={room}
+                    onChange={(e) => setRoom(e.target.value)}
+                    style={{
+                      width: isMobile ? "75%" : "auto",
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: "1px solid rgba(255,255,255,0.4)",
+                      outline: "none",
+                      marginBottom: 10,
+                      fontSize: isMobile ? 14 : 15,
+                    }}
+                  />
+                  <button
+                    onClick={joinRoom}
+                    style={{
+                      background: "white",
+                      color: "#2563eb",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "8px 10px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                      marginBottom: 10,
+                      fontSize: isMobile ? 14 : 15,
+                      width: isMobile ? "80%" : "auto",
+                      alignItems: "center",
+                    }}
+                  >
+                    Join 🚀
+                  </button>
+
+                  {roomUsers.length > 0 && (
                     <div
-                      key={u}
                       style={{
-                        fontSize: isMobile ? 13 : 14,
-                        color: "white",
-                        padding: "4px 0",
+                        marginTop: 12,
+                        background: "rgba(255,255,255,0.15)",
+                        padding: 8,
+                        borderRadius: 8,
                       }}
                     >
-                      {u === username ? <b>You</b> : u}
+                      <h5 style={{ color: "white", fontSize: isMobile ? 15 : 16 }}>
+                        Room Members
+                      </h5>
+                      {roomUsers.map((u) => (
+                        <div
+                          key={u}
+                          style={{
+                            fontSize: isMobile ? 13 : 14,
+                            color: "white",
+                            padding: "4px 0",
+                          }}
+                        >
+                          {u === username ? <b>You</b> : u}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
 
-        {/* Chat Section */}
+        {/* ======= Chat Section ======= */}
         <div
           style={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            height: isMobile ? "100%" : "auto",
+            height: "100%",
+            position: "relative",
           }}
         >
           {/* Header */}
@@ -919,26 +995,45 @@ export default function Chat() {
             style={{
               padding: isMobile ? "10px 12px" : "14px 18px",
               borderBottom: "1px solid #e2e8f0",
-              background: "#f1f5f9",
+              background: themeColors.card,
+              color: themeColors.text,
               fontWeight: 600,
               display: "flex",
               justifyContent: "space-between",
-              alignItems: isMobile ? "flex-start" : "center",
-              flexDirection: isMobile ? "column" : "row",
-              gap: isMobile ? 6 : 0,
+              alignItems: "center",
+              gap: isMobile ? 8 : 12,
+              position: "relative",
+              zIndex: 10,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
+            {/* Mobile hamburger */}
+            {isMobile && (
+              <button
+                onClick={() => setShowSidebar((s) => !s)}
+                style={{
+                  background: theme === "light" ? "#2563eb" : "#38bdf8",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+                aria-label="Toggle sidebar"
+              >
+                {showSidebar ? "✖" : "☰"}
+              </button>
+            )}
+
+            {/* Title / status */}
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 ,justifyContent: "center",     // ✅ keeps it vertically steady
+    minHeight: 42, }}>
               {mode === "private" ? (
                 receiver ? (
                   <>
                     <span
                       style={{
+                        paddingTop: 2,
                         fontSize: isMobile ? 15 : 16,
                         wordBreak: "break-word",
                       }}
@@ -948,7 +1043,7 @@ export default function Chat() {
                     </span>
                     <small
                       style={{
-                        color: "#475569",
+                        color: theme === "light" ? "#475569" : "#cbd5e1",
                         fontSize: isMobile ? 12 : 13,
                       }}
                     >
@@ -960,9 +1055,7 @@ export default function Chat() {
                     </small>
                   </>
                 ) : (
-                  <span style={{ fontSize: isMobile ? 15 : 16 }}>
-                    Select a user 💬
-                  </span>
+                  <span style={{ fontSize: isMobile ? 15 : 16 }}>Select a user 💬</span>
                 )
               ) : room ? (
                 <span style={{ fontSize: isMobile ? 15 : 16 }}>Room: {room}</span>
@@ -971,9 +1064,10 @@ export default function Chat() {
               )}
             </div>
 
-            {mode === "private" && receiver && (
-              <div style={{ display: "flex", gap: 8, flexWrap: isMobile ? "wrap" : "nowrap" }}>
-                {!blockedUsers.includes(receiver) ? (
+            {/* Single ThemeToggle — top-right */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {mode === "private" && receiver && (
+                !blockedUsers.includes(receiver) ? (
                   <button
                     onClick={() => blockUser(receiver)}
                     style={{
@@ -1003,10 +1097,36 @@ export default function Chat() {
                   >
                     Unblock ♻️
                   </button>
-                )}
-              </div>
-            )}
+                )
+              )}
+              
+            </div>
           </div>
+
+          {/* ======= Frosted overlay behind the sidebar (mobile only) ======= */}
+          <AnimatePresence>
+            {isMobile && showSidebar && (
+              <motion.div
+                key="glass-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setShowSidebar(false)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 15,
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  background: theme === "light"
+                    ? "rgba(15, 23, 42, 0.25)"
+                    : "rgba(2, 6, 23, 0.35)",
+                }}
+                aria-label="Close sidebar overlay"
+              />
+            )}
+          </AnimatePresence>
 
           {/* Messages */}
           <div
@@ -1027,7 +1147,7 @@ export default function Chat() {
                 return (
                   <motion.div
                     key={m._id || `${m.sender}-${m.timestamp}-${i}`}
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 14, y: 0 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 14 }}
                     transition={{ duration: 0.22 }}
@@ -1128,7 +1248,7 @@ export default function Chat() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              background: "#f8fafc",
+              background: theme === "light" ? "#f8fafc" : "#1e293b",
               flexShrink: 0,
             }}
           >
@@ -1140,6 +1260,7 @@ export default function Chat() {
                 border: "none",
                 cursor: "pointer",
               }}
+              aria-label="Toggle emoji picker"
             >
               <Smile size={isMobile ? 20 : 22} color="#2563eb" />
             </button>
@@ -1151,7 +1272,7 @@ export default function Chat() {
                   position: "absolute",
                   bottom: isMobile ? "60px" : "80px",
                   left: isMobile ? "10px" : "30px",
-                  zIndex: 20,
+                  zIndex: 25,
                 }}
               >
                 <EmojiPicker
@@ -1201,47 +1322,53 @@ export default function Chat() {
                 borderRadius: "50%",
                 width: isMobile ? 40 : 44,
                 height: isMobile ? 40 : 44,
-                background: "linear-gradient(135deg, #2563eb, #38bdf8)",
+                background: themeColors.accent,
                 color: "white",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
+              aria-label="Send message"
             >
               <Send size={isMobile ? 16 : 18} />
             </motion.button>
           </div>
         </div>
 
+        {/* ======= END Chat Section ======= */}
 
-      {/* Toast Notifications */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ duration: 0.25 }}
-            style={{
-              position: "fixed",
-              bottom: 26,
-              left: "50%",
-              transform: "translateX(-50%)",
-              background: "#1e3a8a",
-              color: "white",
-              padding: "10px 16px",
-              borderRadius: 10,
-              boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
-              fontSize: isMobile ? 13 : 14,
-              textAlign: "center",
-              maxWidth: "80%",
-              zIndex: 100,
-            }}
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
-       </motion.div> 
-    </div> 
-);
+        {/* ======= Toast Notifications ======= */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.25 }}
+              style={{
+                position: "fixed",
+                bottom: 26,
+                left: "50%",
+                transform: "translateX(-50%)",
+                background:
+                  theme === "light"
+                    ? "rgba(37,99,235,0.9)"
+                    : "rgba(96,165,250,0.9)",
+                color: "white",
+                padding: "10px 16px",
+                borderRadius: 10,
+                boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
+                fontSize: isMobile ? 13 : 14,
+                textAlign: "center",
+                maxWidth: "80%",
+                zIndex: 50,
+              }}
+            >
+              {toast}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* ======= END Toast ======= */}
+      </motion.div>
+    </div>
+  );
 }

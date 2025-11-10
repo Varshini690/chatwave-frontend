@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -13,9 +13,9 @@ function ForgotPassword() {
     setMessage("");
 
     try {
-      const res = await axios.post("http://localhost:5000/forgot-password", { email });
+      const res = await API.post("/forgot-password", { email });
       setMessage(res.data.message);
-      setShowSuccess(true); // 🎉 show popup
+      setShowSuccess(true);
       setEmail("");
     } catch (err) {
       console.error("Forgot password error:", err);
@@ -27,25 +27,30 @@ function ForgotPassword() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%)",
+        width: "100vw",
+        background:
+          "linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         fontFamily: "Inter, sans-serif",
-        position: "relative",
+        padding: "16px",
+        overflowX: "hidden",
       }}
     >
-      {/* 🌈 Main Card */}
+      {/* 🌈 Forgot Password Card */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         style={{
-          width: "420px",
+          width: "100%",
+          maxWidth: "360px",
           background: "rgba(255,255,255,0.9)",
-          borderRadius: "24px",
-          padding: "45px 40px",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+          borderRadius: "20px",
+          padding: "30px 24px",
+          boxShadow: "0 8px 28px rgba(0,0,0,0.1)",
+          margin: "0 auto",
         }}
       >
         <motion.h2
@@ -55,16 +60,17 @@ function ForgotPassword() {
           style={{
             textAlign: "center",
             fontWeight: "700",
-            fontSize: "26px",
+            fontSize: "clamp(20px, 4.5vw, 26px)",
             background: "linear-gradient(90deg, #2563eb, #06b6d4)",
             WebkitBackgroundClip: "text",
             color: "transparent",
-            marginBottom: "35px",
+            marginBottom: "28px",
           }}
         >
           Forgot Password? 🔑
         </motion.h2>
 
+        {/* 🧾 Form */}
         <form onSubmit={handleSubmit}>
           <label
             style={{
@@ -72,10 +78,12 @@ function ForgotPassword() {
               marginBottom: "8px",
               fontWeight: "600",
               color: "#334155",
+              fontSize: "13px",
             }}
           >
             Enter your email
           </label>
+
           <input
             type="email"
             placeholder="Enter your registered email"
@@ -84,12 +92,12 @@ function ForgotPassword() {
             required
             style={{
               width: "100%",
-              padding: "12px 16px",
-              borderRadius: "12px",
+              padding: "10px 14px",
+              borderRadius: "10px",
               border: "1.5px solid #e2e8f0",
               outline: "none",
-              fontSize: "15px",
-              background: "rgba(255, 255, 255, 0.95)",
+              fontSize: "14px",
+              background: "rgba(255,255,255,0.95)",
               color: "#0f172a",
               transition: "all 0.2s ease-in-out",
             }}
@@ -109,36 +117,40 @@ function ForgotPassword() {
               color: "white",
               fontWeight: "600",
               border: "none",
-              borderRadius: "14px",
-              padding: "13px 0",
+              borderRadius: "12px",
+              padding: "11px 0",
               cursor: "pointer",
-              fontSize: "16px",
-              marginTop: "25px",
+              fontSize: "15px",
+              marginTop: "22px",
+              letterSpacing: "0.3px",
             }}
           >
             Send Reset Link
           </motion.button>
         </form>
 
+        {/* 💬 Message */}
         {message && (
           <p
             style={{
               textAlign: "center",
-              marginTop: "20px",
+              marginTop: "18px",
               color: message.includes("✅") ? "#16a34a" : "#dc2626",
               fontWeight: "500",
+              fontSize: "13px",
             }}
           >
             {message}
           </p>
         )}
 
+        {/* 🔗 Back to Login */}
         <p
           style={{
             textAlign: "center",
             marginTop: "15px",
             color: "#475569",
-            fontSize: "14px",
+            fontSize: "13px",
           }}
         >
           Remember your password?{" "}
@@ -162,33 +174,36 @@ function ForgotPassword() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.3 }}
             style={{
               position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              background: "rgba(0,0,0,0.4)",
+              inset: 0,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              zIndex: 100,
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+              overflow: "hidden",
+              padding: "0 16px",
             }}
           >
             <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
+              initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 150 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120 }}
               style={{
                 background: "white",
-                borderRadius: "20px",
-                padding: "40px 50px",
+                borderRadius: "14px",
+                padding: "22px 20px",
                 textAlign: "center",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                width: "100%",
+                maxWidth: "320px",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                margin: "auto",
               }}
             >
+              {/* ✅ Checkmark Animation */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -200,7 +215,7 @@ function ForgotPassword() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="#22c55e"
-                  style={{ width: "70px", height: "70px", margin: "0 auto" }}
+                  style={{ width: "60px", height: "60px", margin: "0 auto" }}
                 >
                   <motion.path
                     initial={{ pathLength: 0 }}
@@ -213,10 +228,22 @@ function ForgotPassword() {
                 </svg>
               </motion.div>
 
-              <h3 style={{ marginTop: "20px", color: "#16a34a", fontWeight: "700" }}>
+              <h3
+                style={{
+                  marginTop: "16px",
+                  color: "#16a34a",
+                  fontWeight: "700",
+                }}
+              >
                 Email Sent Successfully 🎉
               </h3>
-              <p style={{ color: "#475569", marginTop: "10px", fontSize: "14px" }}>
+              <p
+                style={{
+                  color: "#475569",
+                  marginTop: "8px",
+                  fontSize: "13px",
+                }}
+              >
                 Check your inbox for the password reset link.
               </p>
 
@@ -226,14 +253,15 @@ function ForgotPassword() {
                 transition={{ type: "spring", stiffness: 300 }}
                 onClick={() => setShowSuccess(false)}
                 style={{
-                  marginTop: "25px",
+                  marginTop: "20px",
                   background: "linear-gradient(135deg, #38bdf8, #2563eb)",
                   color: "white",
                   border: "none",
-                  borderRadius: "12px",
-                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  padding: "9px 18px",
                   cursor: "pointer",
                   fontWeight: "600",
+                  fontSize: "14px",
                 }}
               >
                 OK

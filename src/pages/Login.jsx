@@ -1,8 +1,16 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api";
 import { useNavigate, Link } from "react-router-dom";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react"; // 👁️ icons
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { useTheme } from "../ThemeContext"; // ✅ Theme hook
+import ThemeToggle from "../components/ThemeToggle"; // ✅ Added for completeness
 
 function Login() {
   const navigate = useNavigate();
@@ -11,20 +19,19 @@ function Login() {
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { theme } = useTheme(); // ✅ Get current theme
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await axios.post("http://localhost:5000/login", form, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await API.post("/login", form);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
-
       alert("✅ Login successful!");
       navigate("/room");
     } catch (err) {
@@ -33,28 +40,28 @@ function Login() {
     }
   };
 
-  // 🧭 Handle Password Reset
+  // Forgot Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/forgot-password", { email: resetEmail });
-      alert("📩 Password reset link sent to your email!");
+      await API.post("/forgot-password", { email: resetEmail });
+      alert("📩 Password reset link sent!");
       setShowReset(false);
       setResetEmail("");
     } catch (err) {
-      alert("❌ Unable to send reset link. Please check your email.");
+      alert("❌ Unable to send reset link.");
     }
   };
 
-  // 🪄 3D Tilt
+  // 3D Tilt Animation
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [0, 1], [10, -10]);
   const rotateY = useTransform(x, [0, 1], [-10, 10]);
-  const handleMouseMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const xVal = (event.clientX - rect.left) / rect.width;
-    const yVal = (event.clientY - rect.top) / rect.height;
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const xVal = (e.clientX - rect.left) / rect.width;
+    const yVal = (e.clientY - rect.top) / rect.height;
     x.set(xVal);
     y.set(yVal);
   };
@@ -63,21 +70,64 @@ function Login() {
     y.set(0.5);
   };
 
+  // 🌗 Theme-based colors
+  const background =
+    theme === "light"
+      ? "linear-gradient(120deg,#f0f9ff 0%,#e0f2fe 50%,#ede9fe 100%)"
+      : "radial-gradient(circle at top left, #020617, #0f172a 40%, #1e3a8a 100%)";
+
+  const cardBackground =
+    theme === "light"
+      ? "rgba(255,255,255,0.85)"
+      : "rgba(30,41,59,0.8)";
+
+  const textColor = theme === "light" ? "#0f172a" : "#f8fafc";
+  const labelColor = theme === "light" ? "#334155" : "#cbd5e1";
+  const inputBg =
+    theme === "light" ? "rgba(255,255,255,0.95)" : "rgba(15,23,42,0.7)";
+  const borderColor =
+    theme === "light" ? "#e2e8f0" : "rgba(148,163,184,0.4)";
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(120deg, #f0f9ff 0%, #e0f2fe 50%, #ede9fe 100%)",
+        background,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        fontFamily: "Inter, sans-serif",
+        padding: "16px",
+        fontFamily: "Inter,sans-serif",
+        transition: "all 0.4s ease-in-out",
         position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* 🔹 Main Login Card */}
+      {/* ✨ Ambient glow for dark mode */}
+      {theme === "dark" && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.15 }}
+          transition={{ duration: 1.2 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(circle at 30% 20%, rgba(59,130,246,0.3), transparent 60%)",
+            zIndex: 0,
+          }}
+        />
+      )}
+
+      <ThemeToggle />
+
       <motion.div
-        style={{ perspective: 1000 }}
+        style={{
+          perspective: 1000,
+          width: "100%",
+          maxWidth: "380px",
+          zIndex: 2,
+        }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
@@ -85,34 +135,44 @@ function Login() {
           style={{
             rotateX,
             rotateY,
-            width: "420px",
-            background: "rgba(255, 255, 255, 0.85)",
+            background: cardBackground,
             backdropFilter: "blur(25px)",
-            borderRadius: "24px",
-            padding: "50px 45px",
-            boxShadow: "0 10px 35px rgba(0,0,0,0.08)",
-            transition: "transform 0.3s ease",
+            borderRadius: "20px",
+            padding: "32px 24px",
+            boxShadow:
+              theme === "light"
+                ? "0 8px 28px rgba(0,0,0,0.1)"
+                : "0 12px 45px rgba(59,130,246,0.35)",
+            color: textColor,
+            transition: "all 0.3s ease",
           }}
         >
-          {/* ✨ Title */}
           <motion.h2
-            initial={{ y: -30, opacity: 0 }}
+            initial={{ y: -25, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.7 }}
             style={{
               textAlign: "center",
-              fontWeight: "700",
-              fontSize: "27px",
-              background: "linear-gradient(90deg, #2563eb, #06b6d4)",
+              fontWeight: 700,
+              fontSize: "clamp(20px,4.5vw,26px)",
+              backgroundImage:
+                theme === "light"
+                  ? "linear-gradient(90deg,#2563eb,#06b6d4)"
+                  : "linear-gradient(90deg,#93c5fd,#38bdf8)",
+              backgroundClip: "text",
               WebkitBackgroundClip: "text",
-              color: "transparent",
-              marginBottom: "35px",
+              WebkitTextFillColor: "transparent",
+              textShadow:
+                theme === "dark"
+                  ? "0 0 10px rgba(96,165,250,0.4)"
+                  : "0 0 5px rgba(37,99,235,0.15)",
+              marginBottom: "28px",
+              userSelect: "none",
             }}
           >
             Welcome Back 👋
           </motion.h2>
 
-          {/* 🧾 Form */}
           <motion.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0, y: 20 }}
@@ -120,11 +180,11 @@ function Login() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             {/* Email */}
-            <div style={{ marginBottom: "22px" }}>
-              <label style={labelStyle}>Email</label>
+            <div style={{ marginBottom: "18px", marginRight: "18px" }}>
+              <label style={{ ...labelStyle, color: labelColor }}>Email</label>
               <motion.input
                 whileFocus={{
-                  boxShadow: "0 0 10px rgba(37,99,235,0.2)",
+                  boxShadow: "0 0 8px rgba(37,99,235,0.2)",
                   borderColor: "#38bdf8",
                 }}
                 transition={{ type: "spring", stiffness: 250 }}
@@ -134,17 +194,22 @@ function Login() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  background: inputBg,
+                  color: textColor,
+                  border: `1.5px solid ${borderColor}`,
+                }}
               />
             </div>
 
-            {/* Password with 👁️ toggle */}
-            <div style={{ marginBottom: "22px" }}>
-              <label style={labelStyle}>Password</label>
+            {/* Password */}
+            <div style={{ marginBottom: "18px", marginRight: "18px" }}>
+              <label style={{ ...labelStyle, color: labelColor }}>Password</label>
               <div style={{ position: "relative" }}>
                 <motion.input
                   whileFocus={{
-                    boxShadow: "0 0 10px rgba(37,99,235,0.2)",
+                    boxShadow: "0 0 8px rgba(37,99,235,0.2)",
                     borderColor: "#38bdf8",
                   }}
                   transition={{ type: "spring", stiffness: 250 }}
@@ -154,25 +219,30 @@ function Login() {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  style={inputStyle}
+                  style={{
+                    ...inputStyle,
+                    background: inputBg,
+                    color: textColor,
+                    border: `1.5px solid ${borderColor}`,
+                  }}
                 />
-                <span
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={iconStyle}
-                >
-                  {showPassword ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+                <span onClick={() => setShowPassword(!showPassword)} style={iconStyle}>
+                  {showPassword ? (
+                    <EyeOff size={18} color={theme === "light" ? "#64748b" : "#cbd5e1"} />
+                  ) : (
+                    <Eye size={18} color={theme === "light" ? "#64748b" : "#cbd5e1"} />
+                  )}
                 </span>
               </div>
 
-              {/* Forgot Password */}
               <div style={{ textAlign: "right", marginTop: "5px" }}>
                 <span
                   onClick={() => setShowReset(true)}
                   style={{
                     cursor: "pointer",
                     color: "#2563eb",
-                    fontWeight: "600",
-                    fontSize: "13px",
+                    fontWeight: 600,
+                    fontSize: "12px",
                   }}
                 >
                   Forgot Password?
@@ -184,8 +254,8 @@ function Login() {
             <motion.button
               whileHover={{
                 scale: 1.05,
-                boxShadow: "0 0 18px rgba(37,99,235,0.3)",
-                background: "linear-gradient(135deg, #0ea5e9, #2563eb)",
+                boxShadow: "0 0 15px rgba(37,99,235,0.3)",
+                background: "linear-gradient(135deg,#0ea5e9,#2563eb)",
               }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -196,13 +266,12 @@ function Login() {
             </motion.button>
           </motion.form>
 
-          {/* Register Link */}
           <p
             style={{
               textAlign: "center",
-              marginTop: "15px",
-              color: "#475569",
-              fontSize: "14px",
+              marginTop: "12px",
+              color: theme === "light" ? "#475569" : "#cbd5e1",
+              fontSize: "13px",
             }}
           >
             Don’t have an account?{" "}
@@ -211,23 +280,27 @@ function Login() {
               style={{
                 color: "#2563eb",
                 textDecoration: "none",
-                fontWeight: "600",
+                fontWeight: 600,
               }}
             >
               Register here
             </Link>
           </p>
 
-          {/* 💬 Message */}
           {message && (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               style={{
                 textAlign: "center",
-                marginTop: "20px",
-                color: message.includes("failed") ? "#dc2626" : "#2563eb",
-                fontWeight: "500",
+                marginTop: "16px",
+                color: message.includes("failed")
+                  ? "#dc2626"
+                  : theme === "light"
+                  ? "#2563eb"
+                  : "#60a5fa",
+                fontWeight: 500,
+                fontSize: "13px",
               }}
             >
               {message}
@@ -236,7 +309,7 @@ function Login() {
         </motion.div>
       </motion.div>
 
-      {/* 📨 Forgot Password Modal */}
+      {/* Reset Modal */}
       <AnimatePresence>
         {showReset && (
           <motion.div
@@ -246,14 +319,26 @@ function Login() {
             style={modalOverlay}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              exit={{ scale: 0.85, opacity: 0 }}
               transition={{ type: "spring", stiffness: 120 }}
-              style={modalCard}
+              style={{
+                ...modalCard,
+                background: theme === "light" ? "#ffffff" : "#1e293b",
+                color: textColor,
+              }}
             >
-              <h4 style={{ marginBottom: "15px", color: "#2563eb" }}>Reset Password</h4>
-              <p style={{ fontSize: "14px", color: "#475569", marginBottom: "10px" }}>
+              <h4 style={{ marginBottom: "10px", color: "#2563eb" }}>
+                Reset Password
+              </h4>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: theme === "light" ? "#475569" : "#cbd5e1",
+                  marginBottom: "8px",
+                }}
+              >
                 Enter your email to receive a reset link.
               </p>
               <input
@@ -264,16 +349,16 @@ function Login() {
                 style={modalInput}
                 required
               />
-              <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
+              <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
                 <button
                   onClick={handleResetPassword}
                   style={{
                     ...modalBtn,
-                    background: "linear-gradient(135deg, #38bdf8, #2563eb)",
+                    background: "linear-gradient(135deg,#38bdf8,#2563eb)",
                     color: "white",
                   }}
                 >
-                  Send Link
+                  Send
                 </button>
                 <button
                   onClick={() => setShowReset(false)}
@@ -294,28 +379,26 @@ function Login() {
   );
 }
 
+// 🎨 Styles
 const labelStyle = {
-  fontWeight: "600",
-  fontSize: "14px",
-  color: "#334155",
-  marginBottom: "8px",
+  fontWeight: 600,
+  fontSize: "13px",
+  marginBottom: "6px",
   display: "block",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "12px 16px",
-  borderRadius: "12px",
-  border: "1.5px solid #e2e8f0",
+  padding: "10px 14px",
+  borderRadius: "10px",
   outline: "none",
-  fontSize: "15px",
-  background: "rgba(255, 255, 255, 0.95)",
-  color: "#0f172a",
+  fontSize: "14px",
+  transition: "all 0.2s ease-in-out",
 };
 
 const iconStyle = {
   position: "absolute",
-  right: "14px",
+  right: "12px",
   top: "50%",
   transform: "translateY(-50%)",
   cursor: "pointer",
@@ -323,15 +406,15 @@ const iconStyle = {
 
 const buttonStyle = {
   width: "100%",
-  background: "linear-gradient(135deg, #38bdf8, #2563eb)",
+  background: "linear-gradient(135deg,#38bdf8,#2563eb)",
   color: "white",
-  fontWeight: "600",
+  fontWeight: 600,
   border: "none",
-  borderRadius: "14px",
-  padding: "13px 0",
+  borderRadius: "12px",
+  padding: "11px 0",
   cursor: "pointer",
-  fontSize: "16px",
-  letterSpacing: "0.4px",
+  fontSize: "15px",
+  letterSpacing: "0.3px",
 };
 
 const modalOverlay = {
@@ -345,33 +428,34 @@ const modalOverlay = {
   justifyContent: "center",
   alignItems: "center",
   zIndex: 100,
+  padding: "12px",
 };
 
 const modalCard = {
-  background: "white",
-  padding: "25px 30px",
-  borderRadius: "16px",
-  width: "360px",
-  boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+  padding: "20px 22px",
+  borderRadius: "14px",
+  width: "100%",
+  maxWidth: "320px",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
   textAlign: "center",
 };
 
 const modalInput = {
   width: "100%",
-  padding: "10px 12px",
-  borderRadius: "10px",
+  padding: "8px 10px",
+  borderRadius: "8px",
   border: "1px solid #cbd5e1",
   outline: "none",
-  marginTop: "10px",
-  fontSize: "14px",
+  marginTop: "8px",
+  fontSize: "13px",
 };
 
 const modalBtn = {
   flex: 1,
   border: "none",
-  padding: "10px 0",
-  borderRadius: "10px",
-  fontWeight: "600",
+  padding: "8px 0",
+  borderRadius: "8px",
+  fontWeight: 600,
   cursor: "pointer",
   transition: "0.2s",
 };

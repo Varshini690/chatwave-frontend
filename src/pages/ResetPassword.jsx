@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react"; // 👁️ icons
@@ -24,9 +24,9 @@ function ResetPassword() {
     }
 
     try {
-      const res = await axios.post(`http://localhost:5000/reset-password/${token}`, {
-        password,
-      });
+     const res = await API.post(`/reset-password/${token}`, { password });
+
+      
 
       setMessage("✅ " + res.data.message);
       setShowSuccess(true);
@@ -53,6 +53,7 @@ function ResetPassword() {
         alignItems: "center",
         fontFamily: "Inter, sans-serif",
         position: "relative",
+        marginRight:"18px"
       }}
     >
       {/* 🌈 Main Card */}
