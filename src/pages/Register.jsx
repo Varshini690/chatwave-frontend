@@ -109,7 +109,7 @@ function Register() {
         />
       )}
 
-      <ThemeToggle />
+     
 
       {/* 🌈 3D Card Container */}
       <motion.div

@@ -119,7 +119,7 @@ function Login() {
         />
       )}
 
-      <ThemeToggle />
+      
 
       <motion.div
         style={{
