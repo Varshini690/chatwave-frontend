@@ -5,8 +5,9 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Chat from "./pages/Chat";
 import RoomSelect from "./pages/RoomSelect";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AppLayout from "./Layouts/AppLayout";
-
 
 function App() {
   const isLoggedIn = !!localStorage.getItem("token");
@@ -14,13 +15,10 @@ function App() {
 
   return (
     <Router>
-      {/* ✅ Draggable Theme Button outside Routes (works globally) */}
-      
-
       <Routes>
-        {/* ✅ All pages wrapped inside AppLayout */}
+        {/* ✅ Common layout for all routes */}
         <Route element={<AppLayout />}>
-          {/* Default route logic */}
+          {/* Default redirect logic */}
           <Route
             path="/"
             element={
@@ -39,11 +37,11 @@ function App() {
           {/* Auth routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Room selection page */}
+          {/* Chat & Room routes */}
           <Route path="/room" element={<RoomSelect />} />
-
-          {/* Chat route */}
           <Route path="/chat/:roomName" element={<Chat />} />
         </Route>
       </Routes>

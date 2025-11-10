@@ -180,7 +180,7 @@ function Login() {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             {/* Email */}
-            <div style={{ marginBottom: "18px" }}>
+            <div style={{ marginBottom: "18px" ,marginRight:"18px"}}>
               <label style={{ ...labelStyle, color: labelColor }}>Email</label>
               <motion.input
                 whileFocus={{
@@ -204,7 +204,7 @@ function Login() {
             </div>
 
             {/* Password */}
-            <div style={{ marginBottom: "18px" }}>
+            <div style={{ marginBottom: "18px" ,marginRight:"18px"}}>
               <label style={{ ...labelStyle, color: labelColor }}>Password</label>
               <div style={{ position: "relative" }}>
                 <motion.input

@@ -408,48 +408,54 @@ export default function Chat() {
 
   // ---------- UI ----------
   return (
-    <div
+   <div
   style={{
     height: "100dvh",
-    paddingTop: "16px", 
     background: themeColors.background,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: isMobile ? 0 : 20,
+    padding: isMobile ? "10px" : "30px", // ✅ add consistent inner spacing
     margin: 0,
     overflow: "hidden",
     overflowY: "auto",
+    boxSizing: "border-box",
     transition: "all 0.4s ease-in-out",
     color: themeColors.text,
   }}
 >
 
+
      <motion.div
   initial={{ opacity: 0, scale: 0.97 }}
   animate={{ opacity: 1, scale: 1 }}
   transition={{ duration: 0.5, ease: "easeOut" }}
-  style={{
+   style={{
     transformOrigin: "center top",
     width: "100%",
-    maxWidth: isMobile ? "100%" : 1100,
+    maxWidth: isMobile ? "100%" : "1080px",  // ✅ slightly smaller for safe centering
     height: wrapperHeight,
     background: themeColors.card,
-    borderRadius: isMobile ? 0 : 28,
+    borderRadius: isMobile ? 0 : 32,
     boxShadow: isMobile
       ? "none"
       : theme === "dark"
-      ? glowStrong
-      : "0 12px 45px rgba(0,0,0,0.25)",
+      ? "0 0 30px rgba(56,189,248,0.45), 0 0 80px rgba(37,99,235,0.25)"
+      : "0 15px 55px rgba(0,0,0,0.25)",
     display: "flex",
     flexDirection: isMobile ? "column" : "row",
     overflow: "hidden",
     position: "relative",
-    margin: "auto",
+    margin: "0 auto",         // ✅ horizontally centers it perfectly
+    marginTop: isMobile ? 10 : 24,   // ✅ adds breathing room top
+    marginBottom: isMobile ? 10 : 24, // ✅ adds breathing room bottom
     boxSizing: "border-box",
-   
-    border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.1)",
+    border:
+      theme === "light"
+        ? "1px solid #e2e8f0"
+        : "1px solid rgba(255,255,255,0.08)",
   }}
+
 >
 
 
