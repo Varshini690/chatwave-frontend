@@ -447,7 +447,7 @@ export default function Chat() {
     position: "relative",
     margin: "auto",
     boxSizing: "border-box",
-    transformOrigin: "top center",
+   
     border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255,255,255,0.1)",
   }}
 >
